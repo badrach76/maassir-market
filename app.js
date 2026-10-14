@@ -187,22 +187,25 @@ function mountPlatformGate(){
   if(platformRulesAccepted())return;
   const box=document.createElement('div');box.id='platformGate';box.className='platform-gate';box.innerHTML=`<div class="platform-gate-box" role="dialog" aria-modal="true" aria-labelledby="gateTitle"><div class="platform-gate-head"><img class="platform-gate-logo" src="logoSAM.png" alt="MAASSIR MARKET"><div><span class="eyebrow">سوق معاصر المغرب · MAASSIR MARKET</span><h2 id="gateTitle">الموافقة على القانون الداخلي</h2><p>يرجى قراءة القانون الداخلي والموافقة عليه قبل ولوج المنصة واستعمال خدماتها.</p></div></div><div class="law-content" id="platformLawContent"><p><b>سوق أرباب المعاصر – البيع والشراء</b> فضاء مهني مخصص لنشر عروض وطلبات البيع والشراء في مجال زيت الزيتون ومعدات وتجهيزات المعاصر.</p>${tr('lawBody')}</div><label class="gate-agree" for="platformGateAgree"><input id="platformGateAgree" type="checkbox"><span>أوافق على القانون الداخلي، وأقر بأنني مسؤول عن صحة معلومات إعلاني وعن معاملتي مع الطرف الآخر، وأن المنصة ليست طرفاً في المعاملة ولا تضمن إتمامها.</span></label><div class="gate-actions"><button id="platformGateEnter" class="btn primary" type="button" disabled>أوافق وأدخل إلى المنصة</button></div></div>`;
   document.body.appendChild(box);
-  setLang(lang(),false);
   const check=box.querySelector('#platformGateAgree'),enter=box.querySelector('#platformGateEnter');
-  // لا نربط تفعيل الموافقة بتمرير شريط القانون؛ فهذا كان يعطّل الزر على بعض الهواتف.
+  // Bind the acceptance controls BEFORE language initialization so a translation error
+  // can never leave the entry button without a working handler.
   const syncGateButton=()=>{enter.disabled=!check.checked;enter.setAttribute('aria-disabled',String(!check.checked))};
   check.addEventListener('change',syncGateButton);
   check.addEventListener('input',syncGateButton);
-  enter.addEventListener('click',()=>{
-    if(!check.checked){check.focus();return;}
-    try{sessionStorage.setItem(RULES_ACCEPT_KEY,'accepted');}catch(e){console.warn('تعذر حفظ الموافقة في الجلسة',e)}
-    try{localStorage.setItem(RULES_ACCEPT_LOCAL_KEY,'accepted');}catch(e){console.warn('تعذر حفظ الموافقة على هذا الجهاز',e)}
-    // أغلق نافذة الموافقة دون إعادة توجيه أو إعادة تحميل؛ فهذا يمنع تعطل الدخول عند النشر داخل مسار فرعي.
-    box.remove();document.body.classList.remove('rules-gate-open');
-    document.body.style.overflow='';
-  });
+  enter.onclick=function(){
+    if(!check.checked){check.focus();return false;}
+    try{sessionStorage.setItem(RULES_ACCEPT_KEY,'accepted')}catch(e){}
+    try{localStorage.setItem(RULES_ACCEPT_LOCAL_KEY,'accepted')}catch(e){}
+    box.style.display='none';box.setAttribute('aria-hidden','true');
+    document.body.classList.remove('rules-gate-open');document.body.style.overflow='';
+    // Explicitly restore normal page interaction and visibility.
+    document.querySelector('main')?.removeAttribute('aria-hidden');
+    return false;
+  };
   document.body.classList.add('rules-gate-open');
   syncGateButton();
+  try{setLang(lang(),false)}catch(e){console.error('Language initialization failed after gate setup',e)}
 }
 
 function mountGlobalHeader(){
