@@ -18,7 +18,7 @@ Souk.initPublish();
    builder.querySelectorAll('.remove-offer').forEach(b=>b.addEventListener('click',()=>{offers.splice(+b.dataset.i,1);if(!offers.length)offers=[{}];render();sync()}));
    sync();
  }
- function refreshLicense(){const sale=kind?.value==='بيع', oil=cat?.value==='زيت الزيتون';wrap?.classList.toggle('hidden',!(sale&&oil));if(!(sale&&oil)){if(onssa)onssa.value='غير معني'}}
+ function refreshLicense(){const sale=kind?.value==='بيع', oil=cat?.value==='زيت الزيتون', required=sale&&oil;wrap?.classList.toggle('hidden',!required);if(onssa){onssa.required=required;if(!required)onssa.value='غير معني';else if(onssa.value==='غير معني')onssa.value=''}}
  add?.addEventListener('click',()=>{offers.push({});render()});cat?.addEventListener('change',()=>{refreshLicense();render()});kind?.addEventListener('change',refreshLicense);
  const origSubmit=form.addEventListener;
  loadInitial();refreshLicense();
